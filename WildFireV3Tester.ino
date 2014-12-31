@@ -135,6 +135,9 @@ void initializeScheduler(){
   tasks[8].task_period = 1;
   tasks[8].task = &testRfm69receive;
   
+  tasks[9].task_period = 100;
+  tasks[9].task = &testCC3000;
+  
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
   TIMSK3 = _BV(OCIE3A);                        // enable compare match ISR
@@ -167,6 +170,7 @@ void setup(){
   setupBitlash();
   setupSdCard();  
   setupSpiFlash();
+  setupCC3000();
   //setupRfm69();
   initializeScheduler();
 }

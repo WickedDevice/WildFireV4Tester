@@ -59,11 +59,17 @@ numvar enableTestRfm69receive(void){
   return 0;
 }
 
+numvar enableTestCC3000(void){
+  testCC3000_enabled = true;
+  return 0;
+}
+
 void setupBitlash(void){
   initBitlash(115200);
   
   addBitlashFunction("menu", (bitlash_function) menu);  
   addBitlashFunction("test1", (bitlash_function) enableTestAllOutputs);
+  addBitlashFunction("test2",  (bitlash_function) enableTestCC3000);  
   addBitlashFunction("test4", (bitlash_function) enableTestSdCard);
   addBitlashFunction("test5a", (bitlash_function) enableTestRfm69transmit); 
   addBitlashFunction("test5b", (bitlash_function) enableTestRfm69receive);  
