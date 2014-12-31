@@ -17,6 +17,8 @@ numvar menu(void) {
   Serial.println(F("        Erase all, write an 'random' pattern, and verify it"));
   Serial.println(F("test7 - testSpiFlash Quick"));
   Serial.println(F("        Erase all, write a one page 'random' pattern, and verify it"));  
+  Serial.println(F("patch - CC3000 Firmware Patch"));
+  Serial.println(F("        Applies the firmware update to the CC3000 to version 1.14"));
   Serial.println(F("exit  - terminateTests"));
   Serial.println(F("        if the test(s) in progress can be terminated, terminate it"));
   Serial.println();
@@ -64,6 +66,13 @@ numvar enableTestCC3000(void){
   return 0;
 }
 
+numvar enableCC3000Patch(void){
+  terminateTests_enabled = true;
+  terminateTests();
+  wf.begin();
+  firmwareUpdateCC3000_enabled = true;
+}
+
 void setupBitlash(void){
   initBitlash(115200);
   
@@ -76,6 +85,7 @@ void setupBitlash(void){
   addBitlashFunction("test6", (bitlash_function) enableTestSpiFlashComplete);
   addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);    
   addBitlashFunction("exit",  (bitlash_function) enableTerminateTests);
+  addBitlashFunction("patch",  (bitlash_function) enableCC3000Patch);
   
   Serial.println();
   menu();

@@ -5,25 +5,23 @@
 #include "utility/debug.h"
 
 WildFire_CC3000 cc3000;
-#define WLAN_SSID       "WickedDevice"        // cannot be longer than 32 characters!
-#define WLAN_PASS       "wildfire123"
+#define WLAN_SSID       "MyNetworKSSID"        // cannot be longer than 32 characters!
+#define WLAN_PASS       "MyNetworkPassword"
 // Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 
-
-void setupCC3000(void){
-  /* Initialise the module */
-  Serial.print(F("CC3000 Initialization..."));
-  if (!cc3000.begin())
-  {
-    Serial.println(F("Unable to initialise the CC3000! Check your wiring?"));
-    while(1);
-  }
-  Serial.println(F("Complete."));
-}
-
 void testCC3000(void){
   if(testCC3000_enabled){
+    
+    /* Initialise the module */
+    Serial.print(F("CC3000 Initialization..."));
+    if (!cc3000.begin())
+    {
+      Serial.println(F("Unable to initialise the CC3000! Check your wiring?"));
+      while(1);
+    }
+    Serial.println(F("Complete."));    
+    
     displayDriverMode();
     uint16_t firmware = checkFirmwareVersion();
     displayMACAddress();
@@ -86,13 +84,9 @@ void testCC3000(void){
     Serial.println(F("\n\nClosing the connection"));
     cc3000.disconnect();   
     
-    Serial.println(F("Test Complete."));
+    Serial.println(F("Test Complete."));    
     testCC3000_enabled = false;
   }  
-}
-
-void firmwareUpdateCC3000(void){
-  
 }
 
 /**************************************************************************/
@@ -145,21 +139,46 @@ uint16_t checkFirmwareVersion(void)
 
 /**************************************************************************/
 /*!
+    @brief  Tries to read the CC3000's internal firmware patch ID
+*/
+/**************************************************************************/
+void displayFirmwareVersion(void)
+{
+  #ifndef CC3000_TINY_DRIVER
+  uint8_t major, minor;
+
+  if(!cc3000.getFirmwareVersion(&major, &minor))
+  {
+    Serial.println(F("Unable to retrieve the firmware version!\r\n"));
+  }
+  else
+  {
+    Serial.print(F("Firmware V. : "));
+    Serial.print(major); Serial.print(F(".")); Serial.println(minor);
+  }
+  #endif
+}
+
+/**************************************************************************/
+/*!
     @brief  Tries to read the 6-byte MAC address of the CC3000 module
 */
 /**************************************************************************/
-void displayMACAddress(void)
-{
-  uint8_t macAddress[6];
-  
-  if(!cc3000.getMacAddress(macAddress))
+boolean MACvalid = false;
+// array to store MAC address from EEPROM
+uint8_t cMacFromEeprom[MAC_ADDR_LEN];
+
+void displayMACAddress(void){
+  if(!cc3000.getMacAddress(cMacFromEeprom))
   {
     Serial.println(F("Unable to retrieve MAC Address!\r\n"));
+    MACvalid = false;
   }
   else
   {
     Serial.print(F("MAC Address : "));
-    cc3000.printHex((byte*)&macAddress, 6);
+    cc3000.printHex((byte*)&cMacFromEeprom, 6);
+    MACvalid = true;    
   }
 }
 
