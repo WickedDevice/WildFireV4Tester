@@ -9,8 +9,10 @@ numvar menu(void) {
   Serial.println(F("        Update the Firmware on the CC3000 to 1.32"));
   Serial.println(F("test4 - testSdCard"));
   Serial.println(F("        Create a new file on the SD card and read back its contents"));
-  Serial.println(F("test5 - testRfm69"));
-  Serial.println(F("        Listen for incoming packets, and print them out on receipt"));
+  Serial.println(F("test5a- testRfm69transmit"));
+  Serial.println(F("        Transmit radio packets, and print them out on acknowledgment"));
+  Serial.println(F("test5b- testRfm69receive"));
+  Serial.println(F("        Receive radio packets, and print them out on receipt"));
   Serial.println(F("test6 - testSpiFlash Complete"));
   Serial.println(F("        Erase all, write an 'random' pattern, and verify it"));
   Serial.println(F("test7 - testSpiFlash Quick"));
@@ -47,14 +49,26 @@ numvar enableTestSpiFlashQuick(void){
   return 0; 
 }
 
+numvar enableTestRfm69transmit(void){
+  testRfm69transmit_enabled = true;
+  return 0;
+}
+
+numvar enableTestRfm69receive(void){
+  testRfm69receive_enabled = true;
+  return 0;
+}
+
 void setupBitlash(void){
   initBitlash(115200);
   
   addBitlashFunction("menu", (bitlash_function) menu);  
   addBitlashFunction("test1", (bitlash_function) enableTestAllOutputs);
   addBitlashFunction("test4", (bitlash_function) enableTestSdCard);
+  addBitlashFunction("test5a", (bitlash_function) enableTestRfm69transmit); 
+  addBitlashFunction("test5b", (bitlash_function) enableTestRfm69receive);  
   addBitlashFunction("test6", (bitlash_function) enableTestSpiFlashComplete);
-  addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);  
+  addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);    
   addBitlashFunction("exit",  (bitlash_function) enableTerminateTests);
   
   Serial.println();

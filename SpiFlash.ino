@@ -4,11 +4,12 @@ WildFire_SPIFlash flash;
 uint16_t num_pages_to_test = 1024;
 
 void setupSpiFlash(void){
+  Serial.print(F("SPI Flash Initiation..."));
   if (flash.initialize()){
-    Serial.println("SPI Flash Initiazed,");
+    Serial.println(F("Complete."));    
   }
   else{
-    Serial.println("SPI Flash Initialization Failed!");  
+    Serial.println(F("Failed!"));  
   }
 }
 
@@ -23,7 +24,7 @@ void testSpiFlash(void){
     Serial.print(F("Erasing Flash chip ... "));
     flash.chipErase();
     while(flash.busy());
-    Serial.println("DONE");  
+    Serial.println(F("DONE"));  
     
     randomSeed(seed);   
     // write a random sequence to flash

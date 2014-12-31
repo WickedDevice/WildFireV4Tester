@@ -22,7 +22,7 @@ typedef struct {
 //                                                                //
 ////////////////////////////////////////////////////////////////////
  
-#define NUM_TASKS (8)
+#define NUM_TASKS (168)
 task_t tasks[NUM_TASKS] = {0};
 
 void setupCC3000(void);
@@ -36,8 +36,10 @@ void testSdCard(void);
 boolean testSdCard_enabled = false;
 
 void setupRfm69(void);
-void testRfm69(void); 
-boolean testRfm69_enabled = false;
+void testRfm69transmit(void); 
+void testRfm69receive(void); 
+boolean testRfm69transmit_enabled = false;
+boolean testRfm69receive_enabled = false;
 
 void setupSpiFlash(void);
 void testSpiFlash(void); 
@@ -88,7 +90,8 @@ void terminateTests(void){
     testCC3000_enabled = false;
     firmwareUpdateCC3000_enabled = false;
     testSdCard_enabled = false;
-    testRfm69_enabled = false;
+    testRfm69transmit_enabled = false;    
+    testRfm69receive_enabled = false;
     testSpiFlash_enabled = false;
     testAllOutputs_enabled = false;
     
@@ -120,14 +123,17 @@ void initializeScheduler(){
   tasks[4].task_period = 100;
   tasks[4].task = &testSdCard;
 
-  tasks[5].task_period = 100;
-  tasks[5].task = &testRfm69;
+  tasks[5].task_period = 300;
+  tasks[5].task = &testRfm69transmit;
 
   tasks[6].task_period = 100;
   tasks[6].task = &testSpiFlash;
   
   tasks[7].task_period = 1;
   tasks[7].task = &bitlashTask;
+
+  tasks[8].task_period = 1;
+  tasks[8].task = &testRfm69receive;
   
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
@@ -161,6 +167,7 @@ void setup(){
   setupBitlash();
   setupSdCard();  
   setupSpiFlash();
+  //setupRfm69();
   initializeScheduler();
 }
  
