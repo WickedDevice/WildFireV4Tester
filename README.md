@@ -7,3 +7,4 @@ Arduino Library Dependencies:
 * [WildFire_RFM69](https://github.com/wickeddevice/WildFire_RFM69)
 * [WildFire_SPIFlash](https://github.com/wickeddevice/WildFire_SPIFlash)
 * [WildFire_CC3000_Library](https://github.com/wickeddevice/WildFire_CC3000_Library)
+* [Bitlash](https://github.com/billroy/bitlash)
