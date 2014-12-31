@@ -4,8 +4,11 @@
 #include <string.h>
 #include "utility/debug.h"
 
+boolean restart_required_buildtest = false;
+extern boolean restart_required_fwpatch;
+
 WildFire_CC3000 cc3000;
-#define WLAN_SSID       "MyNetworKSSID"        // cannot be longer than 32 characters!
+#define WLAN_SSID       "MyNetworkSSID"        // cannot be longer than 32 characters!
 #define WLAN_PASS       "MyNetworkPassword"
 // Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
 #define WLAN_SECURITY   WLAN_SEC_WPA2
@@ -13,6 +16,15 @@ WildFire_CC3000 cc3000;
 void testCC3000(void){
   if(testCC3000_enabled){
     
+    if(restart_required_fwpatch){
+      Serial.println(F("A restart is required before executing this test...")); 
+      Serial.println(F("No action taken."));
+      testCC3000_enabled = false;
+      return;
+    }
+    
+    restart_required_buildtest = true;
+     
     /* Initialise the module */
     Serial.print(F("CC3000 Initialization..."));
     if (!cc3000.begin())

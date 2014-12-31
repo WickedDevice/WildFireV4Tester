@@ -7,6 +7,9 @@
 #include "utility/nvmem.h"
 #include "driverpatchinc_1_14.h"
 
+extern boolean restart_required_buildtest;
+boolean restart_required_fwpatch = false;
+
 void firmwareUpdateCC3000(void){
   static uint8_t ucStatus_Dr, return_status = 0xFF;
   static uint8_t counter = 0;
@@ -36,7 +39,15 @@ void firmwareUpdateCC3000(void){
   /* 15. user file */  
   
   if(firmwareUpdateCC3000_enabled){
-  
+    if(restart_required_buildtest || restart_required_fwpatch){
+      Serial.println(F("A restart is required before executing this test...")); 
+      Serial.println(F("No action taken."));
+      firmwareUpdateCC3000_enabled = false;
+      return;
+    }
+    
+    restart_required_fwpatch = true;
+    
     displayDriverMode();
     displayFreeRam();
   
