@@ -17,6 +17,12 @@ numvar menu(void) {
   Serial.println(F("        Erase all, write an 'random' pattern, and verify it"));
   Serial.println(F("test7 - testSpiFlash Quick"));
   Serial.println(F("        Erase all, write a one page 'random' pattern, and verify it"));  
+  Serial.println(F("initwdt  - Setup Tiny Watchdog to run"));
+  Serial.println(F("           set up Tiny Watchdog to run on next reset/startup"));
+  Serial.println(F("startwdt - Pet the Tiny Watchdog"));
+  Serial.println(F("           Enable petting the Tiny Watchdog (automatically happens after initwdt and reset"));
+  Serial.println(F("stopwdt  - Ignore the Tiny Watchdog"));
+  Serial.println(F("           Disable petting the Tiny Watchdog to induce a reset if it's active"));  
   Serial.println(F("exit  - terminateTests"));
   Serial.println(F("        if the test(s) in progress can be terminated, terminate it"));
   Serial.println();
@@ -74,8 +80,41 @@ numvar enableTestCC3000(void){
 
 numvar enableCC3000Patch(void){
   terminateAllTests();
-  wf.begin();
   firmwareUpdateCC3000_enabled = true;
+  return 0;
+}
+
+numvar initTinyWatchdog(void){
+   terminateAllTests();
+   wf.begin();
+   if(eeprom_read_byte((uint8_t *) 0) != 0x73){
+     eeprom_write_byte((uint8_t *) 0, 0x73);  
+   }
+   Serial.println(F("Press Reset Button to start using Tiny Watchdog"));
+   
+   for(;;); // spin forever
+   
+   return 0;
+}
+
+numvar startTinyWatchdog(void){
+   terminateAllTests();
+   wf.begin();
+   usingTinyWatchdog = true;
+   return 0;
+}
+
+numvar stopTinyWatchdog(void){
+   terminateAllTests();
+   wf.begin();
+   if(eeprom_read_byte((uint8_t *) 0) != 0xFF){
+     eeprom_write_byte((uint8_t *) 0, 0xFF);
+   }   
+   usingTinyWatchdog = false;
+   Serial.println(F("Tiny Watchdog disabled."));
+   Serial.println(F("  If Tiny Watchdog is active, a restart will happen within 5 seconds unless you execute 'startwdt'. "));
+   Serial.println(F("  Tiny Watchdog will not be activated after restart."));
+   return 0;
 }
 
 void terminateAllTests(){
@@ -95,6 +134,9 @@ void setupBitlash(void){
   addBitlashFunction("test5b", (bitlash_function) enableTestRfm69receive);  
   addBitlashFunction("test6", (bitlash_function) enableTestSpiFlashComplete);
   addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);    
+  addBitlashFunction("initwdt",  (bitlash_function) initTinyWatchdog);    
+  addBitlashFunction("startwdt",  (bitlash_function) startTinyWatchdog);    
+  addBitlashFunction("stopwdt",  (bitlash_function) stopTinyWatchdog);
   addBitlashFunction("exit",  (bitlash_function) enableTerminateTests);
   
   Serial.println();

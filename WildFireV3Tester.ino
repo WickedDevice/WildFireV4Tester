@@ -7,11 +7,13 @@
 #include <bitlash.h>
 #include <WildFire.h>
 #include <SPI.h>
+#include <TinyWatchdog.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
+#include <avr/eeprom.h>
 
 WildFire wf;
- 
+
 typedef struct {
   uint16_t task_timer;
   uint16_t task_period;
@@ -23,8 +25,8 @@ typedef struct {
 // define NUM_TASKS to be >= the actual number of tasks defined!  //
 //                                                                //
 ////////////////////////////////////////////////////////////////////
- 
-#define NUM_TASKS (168)
+
+#define NUM_TASKS (16)
 task_t tasks[NUM_TASKS] = {0};
 
 void testCC3000(void); 
@@ -100,6 +102,11 @@ void terminateTests(void){
   }
 }
 
+TinyWatchdog tinyWDT;
+boolean usingTinyWatchdog = false;
+void setupWatchdogTask(void);
+void tinyWatchdogTask(void);
+
 void initializeScheduler(){
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
@@ -142,6 +149,9 @@ void initializeScheduler(){
   tasks[10].task_period = 100;
   tasks[10].task = &firmwareUpdateCC3000;
   
+  tasks[11].task_period = 1000;
+  tasks[11].task = &tinyWatchdogTask;
+  
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
   TIMSK3 = _BV(OCIE3A);                        // enable compare match ISR
@@ -172,10 +182,12 @@ void executeTasks(){
 void setup(){
   wf.begin();
   setupBitlash();
+  setupTinyWatchdog();
   setupSdCard();  
   setupSpiFlash();
   //setupRfm69();
-  initializeScheduler();
+  initializeScheduler(); 
+  
 }
  
 void loop(){
