@@ -15,6 +15,7 @@ WildFire_CC3000 cc3000;
 
 void testCC3000(void){
   if(testCC3000_enabled){
+    wf.begin();
     
     if(restart_required_fwpatch){
       Serial.println(F("A restart is required before executing this test...")); 

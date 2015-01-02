@@ -11,6 +11,8 @@ extern boolean restart_required_buildtest;
 boolean restart_required_fwpatch = false;
 
 void firmwareUpdateCC3000(void){
+  wf.begin();
+  
   static uint8_t ucStatus_Dr, return_status = 0xFF;
   static uint8_t counter = 0;
   
