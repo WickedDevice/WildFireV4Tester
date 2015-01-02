@@ -6,7 +6,7 @@ numvar menu(void) {
   Serial.println(F("test2 - testCC3000"));
   Serial.println(F("        connect to network, resolve DNS, and ping a server"));
   Serial.println(F("test3 - firmwareUpdateCC3000"));
-  Serial.println(F("        Update the Firmware on the CC3000 to 1.32"));
+  Serial.println(F("        Applies the firmware update to the CC3000 to version 1.14"));
   Serial.println(F("test4 - testSdCard"));
   Serial.println(F("        Create a new file on the SD card and read back its contents"));
   Serial.println(F("test5a- testRfm69transmit"));
@@ -17,60 +17,70 @@ numvar menu(void) {
   Serial.println(F("        Erase all, write an 'random' pattern, and verify it"));
   Serial.println(F("test7 - testSpiFlash Quick"));
   Serial.println(F("        Erase all, write a one page 'random' pattern, and verify it"));  
-  Serial.println(F("patch - CC3000 Firmware Patch"));
-  Serial.println(F("        Applies the firmware update to the CC3000 to version 1.14"));
   Serial.println(F("exit  - terminateTests"));
   Serial.println(F("        if the test(s) in progress can be terminated, terminate it"));
   Serial.println();
 }
 
 numvar enableTestAllOutputs(void) { 
+  terminateAllTests();
   testAllOutputs_enabled = true;
   return 0;
 }
 
-numvar enableTerminateTests(void) { 
+numvar enableTerminateTests(void) {
+  terminateAllTests(); 
   terminateTests_enabled = true;
   return 0;
 }
 
 numvar enableTestSdCard(void){
+  terminateAllTests();
   testSdCard_enabled = true;
   return 0;
 }
 
 numvar enableTestSpiFlashComplete(void){
+  terminateAllTests();
   testSpiFlash_enabled = true;
   num_pages_to_test = 1024;  
   return 0; 
 }
 
 numvar enableTestSpiFlashQuick(void){
+  terminateAllTests();
   testSpiFlash_enabled = true;
   num_pages_to_test = 1;  
   return 0; 
 }
 
 numvar enableTestRfm69transmit(void){
+  terminateAllTests();  
   testRfm69transmit_enabled = true;
   return 0;
 }
 
 numvar enableTestRfm69receive(void){
+  terminateAllTests();  
   testRfm69receive_enabled = true;
   return 0;
 }
 
 numvar enableTestCC3000(void){
+  terminateAllTests();
   testCC3000_enabled = true;
   return 0;
 }
 
 numvar enableCC3000Patch(void){
-  terminateTests_enabled = true;
-  terminateTests();
+  terminateAllTests();
   wf.begin();
   firmwareUpdateCC3000_enabled = true;
+}
+
+void terminateAllTests(){
+  terminateTests_enabled = true;
+  terminateTests(); 
 }
 
 void setupBitlash(void){
@@ -79,13 +89,13 @@ void setupBitlash(void){
   addBitlashFunction("menu", (bitlash_function) menu);  
   addBitlashFunction("test1", (bitlash_function) enableTestAllOutputs);
   addBitlashFunction("test2",  (bitlash_function) enableTestCC3000);  
+  addBitlashFunction("test3",  (bitlash_function) enableCC3000Patch);  
   addBitlashFunction("test4", (bitlash_function) enableTestSdCard);
   addBitlashFunction("test5a", (bitlash_function) enableTestRfm69transmit); 
   addBitlashFunction("test5b", (bitlash_function) enableTestRfm69receive);  
   addBitlashFunction("test6", (bitlash_function) enableTestSpiFlashComplete);
   addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);    
   addBitlashFunction("exit",  (bitlash_function) enableTerminateTests);
-  addBitlashFunction("patch",  (bitlash_function) enableCC3000Patch);
   
   Serial.println();
   menu();
