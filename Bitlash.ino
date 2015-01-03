@@ -14,9 +14,11 @@ numvar menu(void) {
   Serial.println(F("test5b- testRfm69receive"));
   Serial.println(F("        Receive radio packets, and print them out on receipt"));
   Serial.println(F("test6 - testSpiFlash Complete"));
-  Serial.println(F("        Erase all, write an 'random' pattern, and verify it"));
+  Serial.println(F("        Erase all, write an 'random' pattern, and verify it."));
   Serial.println(F("test7 - testSpiFlash Quick"));
-  Serial.println(F("        Erase all, write a one page 'random' pattern, and verify it"));  
+  Serial.println(F("        Erase all, write a one page 'random' pattern, and verify it."));  
+  Serial.println(F("test8 - External 32.768kHz Crystal"));
+  Serial.println(F("        Blink the onboard LED at 2Hz based on the 32.768kHz crystal."));
   Serial.println(F("initwdt  - Setup Tiny Watchdog to run"));
   Serial.println(F("           set up Tiny Watchdog to run on next reset/startup"));
   Serial.println(F("startwdt - Pet the Tiny Watchdog"));
@@ -25,6 +27,7 @@ numvar menu(void) {
   Serial.println(F("           Disable petting the Tiny Watchdog to induce a reset if it's active"));  
   Serial.println(F("exit  - terminateTests"));
   Serial.println(F("        if the test(s) in progress can be terminated, terminate it"));
+  Serial.println(F("* Note: Tests will generall crash / halt if relevant hardware is not installed on board"));
   Serial.println();
 }
 
@@ -84,6 +87,12 @@ numvar enableCC3000Patch(void){
   return 0;
 }
 
+numvar enableTestExternalCrystal(void){
+  terminateAllTests();
+  testExternalCrystal_enabled = true;
+  return 0;  
+}
+
 numvar initTinyWatchdog(void){
    terminateAllTests();
    wf.begin();
@@ -133,7 +142,8 @@ void setupBitlash(void){
   addBitlashFunction("test5a", (bitlash_function) enableTestRfm69transmit); 
   addBitlashFunction("test5b", (bitlash_function) enableTestRfm69receive);  
   addBitlashFunction("test6", (bitlash_function) enableTestSpiFlashComplete);
-  addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);    
+  addBitlashFunction("test7", (bitlash_function) enableTestSpiFlashQuick);
+  addBitlashFunction("test8", (bitlash_function) enableTestExternalCrystal);
   addBitlashFunction("initwdt",  (bitlash_function) initTinyWatchdog);    
   addBitlashFunction("startwdt",  (bitlash_function) startTinyWatchdog);    
   addBitlashFunction("stopwdt",  (bitlash_function) stopTinyWatchdog);

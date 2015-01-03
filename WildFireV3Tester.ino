@@ -11,11 +11,12 @@
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 #include <avr/eeprom.h>
+#include "utility/debug.h"
 
 WildFire wf;
 
 typedef struct {
-  uint16_t task_timer;
+  volatile uint16_t task_timer;
   uint16_t task_period;
   void (*task)(void);
 } task_t;
@@ -47,6 +48,10 @@ boolean testRfm69receive_enabled = false;
 void setupSpiFlash(void);
 void testSpiFlash(void); 
 boolean testSpiFlash_enabled = false;
+
+void setupExternalCrystal(void);
+void testExternalCrystal(void);
+boolean testExternalCrystal_enabled = false;
 
 boolean testAllOutputs_enabled = false;
 void testAllOutputs(void){
@@ -89,6 +94,7 @@ void bitlashTask(void);
 boolean terminateTests_enabled = false;
 void terminateTests(void){
   if(terminateTests_enabled){
+    wf.begin();
     Serial.println(F("Tests Terminated"));
     testCC3000_enabled = false;
     firmwareUpdateCC3000_enabled = false;
@@ -97,7 +103,7 @@ void terminateTests(void){
     testRfm69receive_enabled = false;
     testSpiFlash_enabled = false;
     testAllOutputs_enabled = false;
-    
+    testExternalCrystal_enabled = false;
     terminateTests_enabled = false;
   }
 }
@@ -152,6 +158,13 @@ void initializeScheduler(){
   tasks[11].task_period = 1000;
   tasks[11].task = &tinyWatchdogTask;
   
+  /* 
+  / uh-oh, if I add task 11, then strange things start happening 
+  / like the watchdog petting task never gets called... wha?
+  */
+  //tasks[11].task_period = 1000;              
+  //tasks[11].task = &testExternalCrystal;  
+  
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
   TIMSK3 = _BV(OCIE3A);                        // enable compare match ISR
@@ -184,10 +197,11 @@ void setup(){
   setupBitlash();
   setupTinyWatchdog();
   setupSdCard();  
-  setupSpiFlash();
+  //setupSpiFlash();
   //setupRfm69();
-  initializeScheduler(); 
-  
+  initializeScheduler();   
+  Serial.print(F("Free RAM: ")); 
+  Serial.println(getFreeRam(), DEC);
 }
  
 void loop(){

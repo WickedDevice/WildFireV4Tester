@@ -7,7 +7,7 @@ void setupTinyWatchdog(void){
 }
 
 void tinyWatchdogTask(void){
-  if(usingTinyWatchdog){
+  if(usingTinyWatchdog){    
      tinyWDT.pet();
   }
 }
