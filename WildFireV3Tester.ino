@@ -12,8 +12,29 @@
 #include <util/atomic.h>
 #include <avr/eeprom.h>
 #include "utility/debug.h"
+#include <avr/wdt.h>
 
 WildFire wf;
+
+// soft reset code
+void soft_reset(){        
+  do                          
+  {                           
+      wdt_enable(WDTO_15MS);  
+      for(;;)                 
+      {                       
+      }                       
+  } while(0);
+}
+
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
+void wdt_init(void)
+{
+    MCUSR = 0;
+    wdt_disable();
+
+    return;
+}
 
 typedef struct {
   volatile uint16_t task_timer;
@@ -113,6 +134,8 @@ boolean usingTinyWatchdog = false;
 void setupWatchdogTask(void);
 void tinyWatchdogTask(void);
 
+void v3BringUp(void);
+
 void initializeScheduler(){
   /////////////////////////////////////////////////////////////////////////////
   //                                                                         //
@@ -161,6 +184,9 @@ void initializeScheduler(){
   tasks[12].task_period = 10;              
   tasks[12].task = &testExternalCrystal;  
   
+  tasks[13].task_period = 10;
+  tasks[13].task = &v3BringUp;
+  
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
   TIMSK3 = _BV(OCIE3A);                        // enable compare match ISR
@@ -198,6 +224,12 @@ void setup(){
   initializeScheduler();   
   Serial.print(F("Free RAM: ")); 
   Serial.println(getFreeRam(), DEC);
+
+  uint32_t magic_value = eeprom_read_dword((uint32_t *) 512);
+  if(magic_value != 0x5a73db21){
+    eeprom_write_dword((uint32_t *) 512, 0x5a73db21);
+    eeprom_write_dword((uint32_t *) 4, 0);
+  }
 }
  
 void loop(){

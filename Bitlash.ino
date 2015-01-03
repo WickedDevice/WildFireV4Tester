@@ -1,4 +1,7 @@
+#include "BringUpTestBits.h"
 extern uint16_t num_pages_to_test;
+
+boolean user_ok_flag = false;
 
 numvar menu(void) { 
   Serial.println(F("test1 - testAllOutputs"));
@@ -24,7 +27,11 @@ numvar menu(void) {
   Serial.println(F("startwdt - Pet the Tiny Watchdog"));
   Serial.println(F("           Enable petting the Tiny Watchdog (automatically happens after initwdt and reset"));
   Serial.println(F("stopwdt  - Ignore the Tiny Watchdog"));
-  Serial.println(F("           Disable petting the Tiny Watchdog to induce a reset if it's active"));  
+  Serial.println(F("           Disable petting the Tiny Watchdog to induce a reset if it's active")); 
+  Serial.println(F("v3light  - Run the V3 Light Test Suite"));
+  Serial.println(F("           Includes:  testAllOutputs, firmwareUpdateCC3000, testCC3000, testSdCard, and Watchdog tests")); 
+  Serial.println(F("v3heavy  - Run the V3 Heavy Test Suite"));
+  Serial.println(F("           Includes:  v3light, plus testSpiFlash, testRfm69, and test XTAL"));   
   Serial.println(F("exit  - terminateTests"));
   Serial.println(F("        if the test(s) in progress can be terminated, terminate it"));
   Serial.println(F("* Note: Tests will generall crash / halt if relevant hardware is not installed on board"));
@@ -38,7 +45,7 @@ numvar enableTestAllOutputs(void) {
 }
 
 numvar enableTerminateTests(void) {
-  terminateAllTests(); 
+  terminateAllTests();
   terminateTests_enabled = true;
   return 0;
 }
@@ -64,13 +71,13 @@ numvar enableTestSpiFlashQuick(void){
 }
 
 numvar enableTestRfm69transmit(void){
-  terminateAllTests();  
+  terminateAllTests(); 
   testRfm69transmit_enabled = true;
   return 0;
 }
 
 numvar enableTestRfm69receive(void){
-  terminateAllTests();  
+  terminateAllTests();
   testRfm69receive_enabled = true;
   return 0;
 }
@@ -94,36 +101,95 @@ numvar enableTestExternalCrystal(void){
 }
 
 numvar initTinyWatchdog(void){
-   terminateAllTests();
-   wf.begin();
-   if(eeprom_read_byte((uint8_t *) 0) != 0x73){
-     eeprom_write_byte((uint8_t *) 0, 0x73);  
-   }
-   Serial.println(F("Press Reset Button to start using Tiny Watchdog"));
-   
-   for(;;); // spin forever
-   
-   return 0;
+  terminateAllTests();
+  wf.begin();
+  if(eeprom_read_byte((uint8_t *) 0) != 0x73){
+    eeprom_write_byte((uint8_t *) 0, 0x73);  
+  }
+  Serial.println(F("Press Reset Button to start using Tiny Watchdog"));
+  
+  for(;;); // spin forever
+  
+  return 0;
 }
 
 numvar startTinyWatchdog(void){
-   terminateAllTests();
-   wf.begin();
-   usingTinyWatchdog = true;
-   return 0;
+  terminateAllTests();
+  wf.begin();
+  usingTinyWatchdog = true;
+  return 0;
 }
 
 numvar stopTinyWatchdog(void){
-   terminateAllTests();
-   wf.begin();
-   if(eeprom_read_byte((uint8_t *) 0) != 0xFF){
-     eeprom_write_byte((uint8_t *) 0, 0xFF);
-   }   
-   usingTinyWatchdog = false;
-   Serial.println(F("Tiny Watchdog disabled."));
-   Serial.println(F("  If Tiny Watchdog is active, a restart will happen within 5 seconds unless you execute 'startwdt'. "));
-   Serial.println(F("  Tiny Watchdog will not be activated after restart."));
-   return 0;
+  terminateAllTests();
+  wf.begin();
+  if(eeprom_read_byte((uint8_t *) 0) != 0xFF){
+    eeprom_write_byte((uint8_t *) 0, 0xFF);
+  }   
+  usingTinyWatchdog = false;
+  Serial.println(F("Tiny Watchdog disabled."));
+  Serial.println(F("  If Tiny Watchdog is active, a restart will happen within 5 seconds unless you execute 'startwdt'. "));
+  Serial.println(F("  Tiny Watchdog will not be activated after restart."));
+  return 0;
+}
+
+numvar userOK(void){
+  Serial.println(F("> OK"));
+  user_ok_flag = true;
+  return 0; 
+}
+
+numvar runV3LightTests(void){
+  Serial.println(F("Executing V3 Light Test Suite"));
+  uint32_t old_test_bits = eeprom_read_dword((uint32_t *) 4);
+  uint32_t test_bits = 0;
+  
+  test_bits |= (1UL << OUTPUTS_TEST);
+  test_bits |= (1UL << CC3000_FIRMWARE_PATCH);
+  test_bits |= (1UL << CC3000_TEST);
+  test_bits |= (1UL << SDCARD_TEST);
+  test_bits |= (1UL << WATCHDOG_TEST);
+  
+  Serial.print("Test Bits = ");
+  Serial.println(test_bits, HEX);
+  if(old_test_bits != test_bits){
+    eeprom_write_dword((uint32_t *) 4, test_bits);
+  }
+  
+  if(usingTinyWatchdog){
+    stopTinyWatchdog();
+    for(;;);
+  }  
+  
+  return 0; 
+}
+
+numvar runV3HeavyTests(void){
+  Serial.println(F("Executing V3 Heavy Test Suite"));
+  uint32_t old_test_bits = eeprom_read_dword((uint32_t *) 4);
+  uint32_t test_bits = 0;
+  
+  test_bits |= (1UL << OUTPUTS_TEST);
+  test_bits |= (1UL << CC3000_FIRMWARE_PATCH);
+  test_bits |= (1UL << CC3000_TEST);
+  test_bits |= (1UL << SDCARD_TEST);
+  test_bits |= (1UL << WATCHDOG_TEST);
+  test_bits |= (1UL << SPIFLASH_TEST);
+  //test_bits |= (1UL << EXTERNAL_XTAL_TEST);
+  //test_bits |= (1UL << RFM69_TEST);
+  
+  Serial.print("Test Bits = ");
+  Serial.println(test_bits, HEX);
+  if(old_test_bits != test_bits){
+    eeprom_write_dword((uint32_t *) 4, test_bits);
+  }
+  
+  if(usingTinyWatchdog){
+    stopTinyWatchdog();
+    for(;;);
+  }    
+  
+  return 0; 
 }
 
 void terminateAllTests(){
@@ -147,6 +213,9 @@ void setupBitlash(void){
   addBitlashFunction("initwdt",  (bitlash_function) initTinyWatchdog);    
   addBitlashFunction("startwdt",  (bitlash_function) startTinyWatchdog);    
   addBitlashFunction("stopwdt",  (bitlash_function) stopTinyWatchdog);
+  addBitlashFunction("v3light", (bitlash_function) runV3LightTests);
+  addBitlashFunction("v3heavy", (bitlash_function) runV3HeavyTests);  
+  addBitlashFunction("ok", (bitlash_function) userOK);
   addBitlashFunction("exit",  (bitlash_function) enableTerminateTests);
   
   Serial.println();

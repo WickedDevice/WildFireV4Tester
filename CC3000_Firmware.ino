@@ -47,6 +47,9 @@ void firmwareUpdateCC3000(void){
       firmwareUpdateCC3000_enabled = false;
       return;
     }
+    else{
+      Serial.println(F("CC3000 Firmware Patch Starting ... please DO NOT RESTART part way."));
+    }
     
     restart_required_fwpatch = true;
     
@@ -159,6 +162,7 @@ void firmwareUpdateCC3000(void){
    
     Serial.println(F("CC3000 Firmware Update Complete. [Restart Required]"));     
     firmwareUpdateCC3000_enabled = false;
+      
   }
 }
 

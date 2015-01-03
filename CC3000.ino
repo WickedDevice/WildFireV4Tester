@@ -10,6 +10,7 @@ extern boolean restart_required_fwpatch;
 WildFire_CC3000 cc3000;
 #define WLAN_SSID       "MyNetworkSSID"        // cannot be longer than 32 characters!
 #define WLAN_PASS       "MyNetworkPassword"
+
 // Security can be WLAN_SEC_UNSEC, WLAN_SEC_WEP, WLAN_SEC_WPA or WLAN_SEC_WPA2
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 
@@ -22,6 +23,9 @@ void testCC3000(void){
       Serial.println(F("No action taken."));
       testCC3000_enabled = false;
       return;
+    }
+    else{
+      Serial.println(F("Testing CC3000 Functionality... please be patient while it connects to the network."));
     }
     
     restart_required_buildtest = true;
@@ -99,6 +103,7 @@ void testCC3000(void){
     
     Serial.println(F("Test Complete."));    
     testCC3000_enabled = false;
+    
   }  
 }
 
