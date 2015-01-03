@@ -42,6 +42,18 @@ typedef struct {
   void (*task)(void);
 } task_t;
  
+ 
+extern boolean usingTinyWatchdog;
+void doReset(){
+  if(usingTinyWatchdog){
+    stopTinyWatchdog();
+    for(;;);
+  } 
+  else{
+    soft_reset();
+  } 
+} 
+ 
 ////////////////////////////////////////////////////////////////////
 //                                                                //
 // define NUM_TASKS to be >= the actual number of tasks defined!  //

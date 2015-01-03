@@ -176,7 +176,7 @@ numvar runV3HeavyTests(void){
   test_bits |= (1UL << WATCHDOG_TEST);
   test_bits |= (1UL << SPIFLASH_TEST);
   //test_bits |= (1UL << EXTERNAL_XTAL_TEST);
-  //test_bits |= (1UL << RFM69_TEST);
+  test_bits |= (1UL << RFM69_TEST);
   
   Serial.print("Test Bits = ");
   Serial.println(test_bits, HEX);

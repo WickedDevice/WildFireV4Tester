@@ -2,6 +2,7 @@
 
 void v3BringUp(void){
   static boolean waiting_for_ok = false;
+  static boolean first_call = true;
   
   uint32_t tests_to_run = eeprom_read_dword((uint32_t *) 4);     // the test enable bit vector is at address 4
   
@@ -20,7 +21,7 @@ void v3BringUp(void){
         Serial.println(F("LED Test Complete - Resetting.")); 
         tests_to_run &= ~(1UL << OUTPUTS_TEST); // clear the bit in RAM        
         eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
-        soft_reset();
+        doReset();
       }
       else{      
         Serial.println(F("LED Test: Type 'ok' <enter> after verifying all pins work"));
@@ -34,7 +35,7 @@ void v3BringUp(void){
       firmwareUpdateCC3000();
       tests_to_run &= ~(1UL << CC3000_FIRMWARE_PATCH);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
-      soft_reset();
+      doReset();
     }
     else if(tests_to_run & (1UL << CC3000_TEST)){
       Serial.println(F("CC3000 Test: Will connect to network and ping the server"));
@@ -42,7 +43,7 @@ void v3BringUp(void){
       testCC3000();      
       tests_to_run &= ~(1UL << CC3000_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
-      soft_reset();
+      doReset();
     }
     else if(tests_to_run & (1UL << SDCARD_TEST)){
       enableTestSdCard();
@@ -61,8 +62,26 @@ void v3BringUp(void){
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom      
       initTinyWatchdog();
     }    
+    else if(tests_to_run & (1UL << RFM69_TEST)){          
+      if(waiting_for_ok){
+        // we're back, the user must have typed 'ok'
+        // clear the pending test flag
+        Serial.println(F("RFM69 Test Complete - Resetting."));         
+        tests_to_run &= ~(1UL << RFM69_TEST); // clear the bit in RAM        
+        eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
+        doReset();        
+      }
+      else{          
+        Serial.println(F("RFM69 Test: Type 'ok' <enter> after verifying packets received"));
+        enableTestRfm69receive();
+        waiting_for_ok = true;      
+      }
+    }     
     else{
     
     }
   }
+  first_call = false;
 }
+
+
