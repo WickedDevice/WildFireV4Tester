@@ -157,19 +157,15 @@ void initializeScheduler(){
   
   tasks[11].task_period = 1000;
   tasks[11].task = &tinyWatchdogTask;
-  
-  /* 
-  / uh-oh, if I add task 11, then strange things start happening 
-  / like the watchdog petting task never gets called... wha?
-  */
-  //tasks[11].task_period = 1000;              
-  //tasks[11].task = &testExternalCrystal;  
+
+  tasks[12].task_period = 10;              
+  tasks[12].task = &testExternalCrystal;  
   
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
   TIMSK3 = _BV(OCIE3A);                        // enable compare match ISR
 }
- 
+
 // initializeScheduler sets this ISR up to fire once per millisecond
 ISR(TIMER3_COMPA_vect){
   for(uint8_t ii = 0; ii < NUM_TASKS; ii++){
