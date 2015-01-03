@@ -24,35 +24,37 @@ void v3BringUp(void){
         doReset();
       }
       else{      
-        Serial.println(F("LED Test: Type 'ok' <enter> after verifying all pins work"));
         enableTestAllOutputs();
+        Serial.println(F("LED Test: Type 'ok' <enter> after verifying all pins work"));        
         waiting_for_ok = true;      
       }
     }       
     else if(tests_to_run & (1UL << CC3000_FIRMWARE_PATCH)){
-      Serial.println(F("CC3000 Patch: Please wait while CC3000 Firmware is updated"));
       enableCC3000Patch();    
+      Serial.println(F("CC3000 Patch: Please wait while CC3000 Firmware is updated"));      
       firmwareUpdateCC3000();
       tests_to_run &= ~(1UL << CC3000_FIRMWARE_PATCH);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
       doReset();
     }
     else if(tests_to_run & (1UL << CC3000_TEST)){
-      Serial.println(F("CC3000 Test: Will connect to network and ping the server"));
       enableTestCC3000(); 
+      Serial.println(F("CC3000 Test: Will connect to network and ping the server"));      
       testCC3000();      
       tests_to_run &= ~(1UL << CC3000_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
       doReset();
     }
-    else if(tests_to_run & (1UL << SDCARD_TEST)){
+    else if(tests_to_run & (1UL << SDCARD_TEST)){      
       enableTestSdCard();
+      Serial.println(F("SD Card Test: Will write a file to the SD card and read it back. Verify 'testing 1, 2, 3.' is printed"));      
       testSdCard();
       tests_to_run &= ~(1UL << SDCARD_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
     }
     else if(tests_to_run & (1UL << SPIFLASH_TEST)){
       enableTestSpiFlashQuick();
+      Serial.println(F("SPI Flash Test: Will write a pattern to the SPI Flash and read it back. Verify '0 errors' is printed"));  
       testSpiFlash();
       tests_to_run &= ~(1UL << SPIFLASH_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
@@ -66,17 +68,34 @@ void v3BringUp(void){
       if(waiting_for_ok){
         // we're back, the user must have typed 'ok'
         // clear the pending test flag
-        Serial.println(F("RFM69 Test Complete - Resetting."));         
+        Serial.println(F("RFM69 Test Complete."));         
         tests_to_run &= ~(1UL << RFM69_TEST); // clear the bit in RAM        
-        eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
-        doReset();        
+        eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom     
+        waiting_for_ok = false;   
       }
       else{          
-        Serial.println(F("RFM69 Test: Type 'ok' <enter> after verifying packets received"));
         enableTestRfm69receive();
+        Serial.println(F("RFM69 Test: Type 'ok' <enter> after verifying packets received"));        
         waiting_for_ok = true;      
       }
-    }     
+    }   
+    else if(tests_to_run & (1UL << EXTERNAL_XTAL_TEST)){          
+      if(waiting_for_ok){
+        // we're back, the user must have typed 'ok'
+        // clear the pending test flag
+        waiting_for_ok = false;
+        tests_to_run &= ~(1UL << EXTERNAL_XTAL_TEST); // clear the bit in RAM     
+        Serial.println(F("External Crystal Test Complete."));                 
+        Serial.println(F("Test Suite Complete - Resetting."));                         
+        eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom     
+        doReset();
+      }
+      else{          
+        Serial.println(F("External Crystal Test: Type 'ok' <enter> after verifying 2Hz LED"));
+        enableTestExternalCrystal();
+        waiting_for_ok = true;      
+      }
+    }   
     else{
     
     }
