@@ -226,8 +226,14 @@ void executeTasks(){
 }
 
 // Arduino structures
+boolean executing_test_suite = false;
 void setup(){
   wf.begin();
+  uint32_t test_vector = eeprom_read_dword((uint32_t *) 4);
+  if(test_vector != 0){
+    executing_test_suite = true;
+  }
+  
   setupBitlash();
   setupTinyWatchdog();
   setupSdCard();  
@@ -241,7 +247,7 @@ void setup(){
   if(magic_value != 0x5a73db21){
     eeprom_write_dword((uint32_t *) 512, 0x5a73db21);
     eeprom_write_dword((uint32_t *) 4, 0);
-  }
+  }  
 }
  
 void loop(){

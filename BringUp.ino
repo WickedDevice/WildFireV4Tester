@@ -18,64 +18,105 @@ void v3BringUp(void){
       if(waiting_for_ok){
         // we're back, the user must have typed 'ok'
         // clear the pending test flag
+        printTestFooterHeader();
         Serial.println(F("LED Test Complete - Resetting.")); 
+        printTestFooterTrailer();
         tests_to_run &= ~(1UL << OUTPUTS_TEST); // clear the bit in RAM        
         eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
+        checkSuiteComplete(tests_to_run, true);
         doReset();
       }
       else{      
         enableTestAllOutputs();
-        Serial.println(F("LED Test: Type 'ok' <enter> after verifying all pins work"));        
+        printTestBannerHeader();
+        Serial.println(F("LED Test: Type 'ok' <enter> after verifying all pins work"));      
+        printTestBannerTrailer();  
         waiting_for_ok = true;      
       }
     }       
     else if(tests_to_run & (1UL << CC3000_FIRMWARE_PATCH)){
       enableCC3000Patch();    
-      Serial.println(F("CC3000 Patch: Please wait while CC3000 Firmware is updated"));      
+      printTestBannerHeader();
+      Serial.println(F("CC3000 Patch: Please wait while CC3000 Firmware is updated"));   
+      printTestBannerTrailer();     
       firmwareUpdateCC3000();
       tests_to_run &= ~(1UL << CC3000_FIRMWARE_PATCH);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
+      printTestFooterHeader();
+      Serial.println(F("CC3000 Firmware Patch Complete."));
+      printTestFooterTrailer();
+      checkSuiteComplete(tests_to_run, true);
       doReset();
     }
     else if(tests_to_run & (1UL << CC3000_TEST)){
       enableTestCC3000(); 
-      Serial.println(F("CC3000 Test: Will connect to network and ping the server"));      
+      printTestBannerHeader();
+      Serial.println(F("CC3000 Test: Will connect to network and ping the server"));
+      printTestBannerTrailer();        
       testCC3000();      
       tests_to_run &= ~(1UL << CC3000_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
+      printTestFooterHeader();
+      Serial.println(F("CC3000 Test Complete."));
+      printTestFooterTrailer();
+      checkSuiteComplete(tests_to_run, true);
       doReset();
     }
     else if(tests_to_run & (1UL << SDCARD_TEST)){      
       enableTestSdCard();
-      Serial.println(F("SD Card Test: Will write a file to the SD card and read it back. Verify 'testing 1, 2, 3.' is printed"));      
+      printTestBannerHeader();
+      Serial.println(F("SD Card Test: Will write a file to the SD card and read it back. Verify 'testing 1, 2, 3.' is printed")); 
+      printTestBannerTrailer();     
       testSdCard();
       tests_to_run &= ~(1UL << SDCARD_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
+      
+      printTestFooterHeader();
+      Serial.println(F("SD Card Test Complete."));
+      printTestFooterTrailer();
+      checkSuiteComplete(tests_to_run, true);
     }
     else if(tests_to_run & (1UL << SPIFLASH_TEST)){
       enableTestSpiFlashQuick();
+      printTestBannerHeader();
       Serial.println(F("SPI Flash Test: Will write a pattern to the SPI Flash and read it back. Verify '0 errors' is printed"));  
+      printTestBannerTrailer();   
       testSpiFlash();
       tests_to_run &= ~(1UL << SPIFLASH_TEST);  // clear the bit in RAM        
       eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
+      
+      printTestFooterHeader();
+      Serial.println(F("SPI Flash Test Complete."));
+      printTestFooterTrailer();
+      checkSuiteComplete(tests_to_run, true);   
     }
     else if(tests_to_run & (1UL << WATCHDOG_TEST)){
       tests_to_run &= ~(1UL << WATCHDOG_TEST);  // clear the bit in RAM        
-      eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom      
-      initTinyWatchdog();
+      eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom  
+      printTestBannerHeader();
+      Serial.println(F("Tiny Watchdog Test [should blink throughout remainder of test suite]")); 
+      printTestBannerTrailer();
+      checkSuiteComplete(tests_to_run, false);      
+      initTinyWatchdog();      
     }    
     else if(tests_to_run & (1UL << RFM69_TEST)){          
       if(waiting_for_ok){
         // we're back, the user must have typed 'ok'
         // clear the pending test flag
-        Serial.println(F("RFM69 Test Complete."));         
+        printTestFooterHeader();
+        Serial.println(F("RFM69 Test Complete.")); 
+        printTestFooterTrailer();       
+                
         tests_to_run &= ~(1UL << RFM69_TEST); // clear the bit in RAM        
         eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom     
         waiting_for_ok = false;   
+        checkSuiteComplete(tests_to_run, true);                
       }
       else{          
         enableTestRfm69receive();
-        Serial.println(F("RFM69 Test: Type 'ok' <enter> after verifying packets received"));        
+        printTestBannerHeader();
+        Serial.println(F("RFM69 Test: Type 'ok' <enter> after verifying packets received"));     
+        printTestBannerTrailer();    
         waiting_for_ok = true;      
       }
     }   
@@ -84,14 +125,18 @@ void v3BringUp(void){
         // we're back, the user must have typed 'ok'
         // clear the pending test flag
         waiting_for_ok = false;
-        tests_to_run &= ~(1UL << EXTERNAL_XTAL_TEST); // clear the bit in RAM     
-        Serial.println(F("External Crystal Test Complete."));                 
-        Serial.println(F("Test Suite Complete - Resetting."));                         
+        tests_to_run &= ~(1UL << EXTERNAL_XTAL_TEST); // clear the bit in RAM                                   
         eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom     
-        doReset();
+        
+        printTestFooterHeader();
+        Serial.println(F("External Crystal Test Complete.")); 
+        printTestFooterTrailer();         
+        checkSuiteComplete(tests_to_run, true);                
       }
       else{          
+        printTestBannerHeader();
         Serial.println(F("External Crystal Test: Type 'ok' <enter> after verifying 2Hz LED"));
+        printTestBannerTrailer(); 
         enableTestExternalCrystal();
         waiting_for_ok = true;      
       }
@@ -103,4 +148,31 @@ void v3BringUp(void){
   first_call = false;
 }
 
+void printTestBannerHeader(){
+  Serial.println(F("########################################################################"));
+  Serial.print(  F("# "));
+}
+void printTestBannerTrailer(){
+  Serial.println(F("########################################################################"));
+  Serial.println();
+}
 
+void printTestFooterHeader(){
+  Serial.println(F("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"));
+  Serial.print(  F("| "));
+}
+void printTestFooterTrailer(){
+  Serial.println(F("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"));
+  Serial.println();
+}
+
+void checkSuiteComplete(uint32_t test_vector, boolean do_reset){
+  if(test_vector == 0){
+    printTestBannerHeader();
+    Serial.println(F("Test Suite Complete - Resetting.")); 
+    printTestBannerTrailer();
+    if(do_reset){
+      doReset();   
+    }
+  } 
+}

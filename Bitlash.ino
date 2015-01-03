@@ -219,7 +219,9 @@ void setupBitlash(void){
   addBitlashFunction("exit",  (bitlash_function) enableTerminateTests);
   
   Serial.println();
-  menu();
+  if(!executing_test_suite){
+    menu();
+  }
 }
 
 void bitlashTask(void){
