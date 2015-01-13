@@ -17,13 +17,13 @@
 WildFire wf;
 
 // soft reset code
-void soft_reset(){        
-  do                          
-  {                           
-      wdt_enable(WDTO_15MS);  
-      for(;;)                 
-      {                       
-      }                       
+void soft_reset(){
+  do
+  {
+      wdt_enable(WDTO_15MS);
+      for(;;)
+      {
+      }
   } while(0);
 }
 
@@ -41,19 +41,19 @@ typedef struct {
   uint16_t task_period;
   void (*task)(void);
 } task_t;
- 
- 
+
+
 extern boolean usingTinyWatchdog;
 void doReset(){
   if(usingTinyWatchdog){
     stopTinyWatchdog();
     for(;;);
-  } 
+  }
   else{
     soft_reset();
-  } 
-} 
- 
+  }
+}
+
 ////////////////////////////////////////////////////////////////////
 //                                                                //
 // define NUM_TASKS to be >= the actual number of tasks defined!  //
@@ -63,7 +63,7 @@ void doReset(){
 #define NUM_TASKS (16)
 task_t tasks[NUM_TASKS] = {0};
 
-void testCC3000(void); 
+void testCC3000(void);
 void firmwareUpdateCC3000(void);
 boolean testCC3000_enabled = false;
 boolean firmwareUpdateCC3000_enabled = false;
@@ -73,13 +73,13 @@ void testSdCard(void);
 boolean testSdCard_enabled = false;
 
 void setupRfm69(void);
-void testRfm69transmit(void); 
-void testRfm69receive(void); 
+void testRfm69transmit(void);
+void testRfm69receive(void);
 boolean testRfm69transmit_enabled = false;
 boolean testRfm69receive_enabled = false;
 
 void setupSpiFlash(void);
-void testSpiFlash(void); 
+void testSpiFlash(void);
 boolean testSpiFlash_enabled = false;
 
 void setupExternalCrystal(void);
@@ -92,31 +92,38 @@ void testAllOutputs(void){
   if(testAllOutputs_enabled){
     int8_t previous_pin = ((int8_t) pin) - 1;
     if(previous_pin < 0){
-      previous_pin = 31;  
+      previous_pin = 31;
     }
-    
-    pinMode(previous_pin, INPUT_PULLUP);    
-    
+
+    if(previous_pin == 9){
+      // handle the SS pin differently
+      pinMode(previous_pin, OUTPUT);
+      digitalWrite(previous_pin, HIGH);
+    }
+    else{
+      pinMode(previous_pin, INPUT_PULLUP);
+    }
+
     if(pin == 0 || pin == 1){
       Serial.end();
-    }    
-    else{
-      Serial.begin(115200); 
     }
-    
+    else{
+      Serial.begin(115200);
+    }
+
     // on a fully populated WildFire v3
     // Dig22 (CC3000 interrupt) and Dig2 (RFM69 interrupt)
     // are connected to buffer outputs
     // and should be treated as "Input Only"
     if(pin != 2 && pin != 22){
-      digitalWrite(pin, LOW);    
-      pinMode(pin, OUTPUT);        
+      digitalWrite(pin, LOW);
+      pinMode(pin, OUTPUT);
     }
-    
-    
+
+
     pin++;
     if(pin >= 32){
-      pin = 0; 
+      pin = 0;
     }
   }
 }
@@ -132,7 +139,7 @@ void terminateTests(void){
     testCC3000_enabled = false;
     firmwareUpdateCC3000_enabled = false;
     testSdCard_enabled = false;
-    testRfm69transmit_enabled = false;    
+    testRfm69transmit_enabled = false;
     testRfm69receive_enabled = false;
     testSpiFlash_enabled = false;
     testAllOutputs_enabled = false;
@@ -159,16 +166,16 @@ void initializeScheduler(){
   /////////////////////////////////////////////////////////////////////////////
   tasks[0].task_period = 1;
   tasks[0].task = &testAllOutputs;
-  
+
   tasks[1].task_period = 1;
   tasks[1].task = &terminateTests;
-  
+
   tasks[2].task_period = 100;
   tasks[2].task = &testCC3000;
 
   tasks[3].task_period = 100;
   tasks[3].task = &firmwareUpdateCC3000;
-  
+
   tasks[4].task_period = 100;
   tasks[4].task = &testSdCard;
 
@@ -177,28 +184,28 @@ void initializeScheduler(){
 
   tasks[6].task_period = 100;
   tasks[6].task = &testSpiFlash;
-  
+
   tasks[7].task_period = 1;
   tasks[7].task = &bitlashTask;
 
   tasks[8].task_period = 1;
   tasks[8].task = &testRfm69receive;
-  
+
   tasks[9].task_period = 100;
   tasks[9].task = &testCC3000;
-  
+
   tasks[10].task_period = 100;
   tasks[10].task = &firmwareUpdateCC3000;
-  
+
   tasks[11].task_period = 1000;
   tasks[11].task = &tinyWatchdogTask;
 
-  tasks[12].task_period = 10;              
-  tasks[12].task = &testExternalCrystal;  
-  
+  tasks[12].task_period = 10;
+  tasks[12].task = &testExternalCrystal;
+
   tasks[13].task_period = 10;
   tasks[13].task = &v3BringUp;
-  
+
   TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30); // prescaler=64, enable CTC mode
   OCR3A = 250;                                 // compare match every 250 ticks
   TIMSK3 = _BV(OCIE3A);                        // enable compare match ISR
@@ -210,7 +217,7 @@ ISR(TIMER3_COMPA_vect){
     if(tasks[ii].task_timer > 0) tasks[ii].task_timer--;
   }
 }
- 
+
 // call this from loop()
 void executeTasks(){
   for(uint8_t ii = 0; ii < NUM_TASKS; ii++){
@@ -233,23 +240,23 @@ void setup(){
   if(test_vector != 0){
     executing_test_suite = true;
   }
-  
+
   setupBitlash();
   setupTinyWatchdog();
-  setupSdCard();  
+  setupSdCard();
   //setupSpiFlash();
   //setupRfm69();
-  initializeScheduler();   
-  Serial.print(F("Free RAM: ")); 
+  initializeScheduler();
+  Serial.print(F("Free RAM: "));
   Serial.println(getFreeRam(), DEC);
 
   uint32_t magic_value = eeprom_read_dword((uint32_t *) 512);
   if(magic_value != 0x5a73db21){
     eeprom_write_dword((uint32_t *) 512, 0x5a73db21);
     eeprom_write_dword((uint32_t *) 4, 0);
-  }  
+  }
 }
- 
+
 void loop(){
   executeTasks();
 }
