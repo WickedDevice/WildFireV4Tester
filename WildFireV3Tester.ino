@@ -95,7 +95,7 @@ void testAllOutputs(void){
       previous_pin = 31;
     }
 
-    if(previous_pin == 9){
+    if(previous_pin == SS){
       // handle the SS pin differently
       pinMode(previous_pin, OUTPUT);
       digitalWrite(previous_pin, HIGH);
