@@ -22,7 +22,6 @@ typedef struct {
 Payload theData;
 
 void setupRfm69(void){
-  wf.begin();  
   Serial.print(F("RFM69 initializion..."));
   char buff[50];
   sprintf(buff, "Listening at %d Mhz, ", FREQUENCY==RF69_433MHZ ? 433 : FREQUENCY==RF69_868MHZ ? 868 : 915);

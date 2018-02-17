@@ -4,7 +4,6 @@ WildFire_SPIFlash flash;
 uint16_t num_pages_to_test = 1024;
 
 void setupSpiFlash(void){
-  wf.begin();
   Serial.print(F("SPI Flash Initialization..."));
   if (flash.initialize()){
     Serial.println(F("Complete."));    

@@ -5,16 +5,13 @@
 #endif
 
 #include <bitlash.h>
-#include <WildFire.h>
 #include <SPI.h>
 #include <TinyWatchdog.h>
 #include <avr/interrupt.h>
 #include <util/atomic.h>
 #include <avr/eeprom.h>
-#include "utility/debug.h"
 #include <avr/wdt.h>
-
-WildFire wf;
+#include <MemoryFree.h>
 
 // soft reset code
 void soft_reset(){
@@ -63,10 +60,6 @@ void doReset(){
 #define NUM_TASKS (16)
 task_t tasks[NUM_TASKS] = {0};
 
-void testCC3000(void);
-void firmwareUpdateCC3000(void);
-boolean testCC3000_enabled = false;
-boolean firmwareUpdateCC3000_enabled = false;
 
 void setupSdCard(void);
 void testSdCard(void);
@@ -110,17 +103,7 @@ void testAllOutputs(void){
     else{
       Serial.begin(115200);
     }
-
-    // on a fully populated WildFire v3
-    // Dig22 (CC3000 interrupt) and Dig2 (RFM69 interrupt)
-    // are connected to buffer outputs
-    // and should be treated as "Input Only"
-    if(pin != 2 && pin != 22){
-      digitalWrite(pin, LOW);
-      pinMode(pin, OUTPUT);
-    }
-
-
+    
     pin++;
     if(pin >= 32){
       pin = 0;
@@ -133,11 +116,8 @@ void bitlashTask(void);
 
 boolean terminateTests_enabled = false;
 void terminateTests(void){
-  if(terminateTests_enabled){
-    wf.begin();
+  if(terminateTests_enabled){    
     Serial.println(F("Tests Terminated"));
-    testCC3000_enabled = false;
-    firmwareUpdateCC3000_enabled = false;
     testSdCard_enabled = false;
     testRfm69transmit_enabled = false;
     testRfm69receive_enabled = false;
@@ -149,7 +129,7 @@ void terminateTests(void){
 }
 
 TinyWatchdog tinyWDT;
-boolean usingTinyWatchdog = false;
+boolean usingTinyWatchdog = true;
 void setupWatchdogTask(void);
 void tinyWatchdogTask(void);
 
@@ -171,10 +151,10 @@ void initializeScheduler(){
   tasks[1].task = &terminateTests;
 
   tasks[2].task_period = 100;
-  tasks[2].task = &testCC3000;
+  tasks[2].task = NULL;
 
   tasks[3].task_period = 100;
-  tasks[3].task = &firmwareUpdateCC3000;
+  tasks[3].task = NULL;
 
   tasks[4].task_period = 100;
   tasks[4].task = &testSdCard;
@@ -192,10 +172,10 @@ void initializeScheduler(){
   tasks[8].task = &testRfm69receive;
 
   tasks[9].task_period = 100;
-  tasks[9].task = &testCC3000;
+  tasks[9].task = NULL;
 
   tasks[10].task_period = 100;
-  tasks[10].task = &firmwareUpdateCC3000;
+  tasks[10].task = NULL;
 
   tasks[11].task_period = 1000;
   tasks[11].task = &tinyWatchdogTask;
@@ -223,7 +203,9 @@ void executeTasks(){
   for(uint8_t ii = 0; ii < NUM_TASKS; ii++){
     if(tasks[ii].task != 0){
       if(tasks[ii].task_timer == 0){
-        tasks[ii].task();
+        if(tasks[ii].task != NULL){
+          tasks[ii].task();
+        }
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
           tasks[ii].task_timer = tasks[ii].task_period;
         }
@@ -235,7 +217,6 @@ void executeTasks(){
 // Arduino structures
 boolean executing_test_suite = false;
 void setup(){
-  wf.begin();
   uint32_t test_vector = eeprom_read_dword((uint32_t *) 4);
   if(test_vector != 0){
     executing_test_suite = true;
@@ -248,7 +229,7 @@ void setup(){
   //setupRfm69();
   initializeScheduler();
   Serial.print(F("Free RAM: "));
-  Serial.println(getFreeRam(), DEC);
+  Serial.println(freeMemory(), DEC);
 
   uint32_t magic_value = eeprom_read_dword((uint32_t *) 512);
   if(magic_value != 0x5a73db21){

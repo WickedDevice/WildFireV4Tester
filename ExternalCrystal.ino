@@ -1,7 +1,6 @@
 volatile boolean timer2_interrupt_flag = false;
 
 void setupExternalCrystal(void){
-  wf.begin();
   ASSR = _BV(AS2);      // use the external crystal as an asynchronous clock source
   TCNT2 = 0;
   while(ASSR & _BV(TCN2UB));  

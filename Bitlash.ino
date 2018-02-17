@@ -6,10 +6,6 @@ boolean user_ok_flag = false;
 numvar menu(void) { 
   Serial.println(F("test1 - testAllOutputs"));
   Serial.println(F("        sequentially pulse each output to a LOW state"));
-  Serial.println(F("test2 - testCC3000"));
-  Serial.println(F("        connect to network, resolve DNS, and ping a server"));
-  Serial.println(F("test3 - firmwareUpdateCC3000"));
-  Serial.println(F("        Applies the firmware update to the CC3000 to version 1.14"));
   Serial.println(F("test4 - testSdCard"));
   Serial.println(F("        Create a new file on the SD card and read back its contents"));
   Serial.println(F("test5a- testRfm69transmit"));
@@ -29,7 +25,7 @@ numvar menu(void) {
   Serial.println(F("stopwdt  - Ignore the Tiny Watchdog"));
   Serial.println(F("           Disable petting the Tiny Watchdog to induce a reset if it's active")); 
   Serial.println(F("v3light  - Run the V3 Light Test Suite"));
-  Serial.println(F("           Includes:  testAllOutputs, firmwareUpdateCC3000, testCC3000, testSdCard, and Watchdog tests")); 
+  Serial.println(F("           Includes:  testAllOutputs, testSdCard, and Watchdog tests")); 
   Serial.println(F("v3heavy  - Run the V3 Heavy Test Suite"));
   Serial.println(F("           Includes:  v3light, plus testSpiFlash, testRfm69, and test XTAL"));   
   Serial.println(F("exit  - terminateTests"));
@@ -82,18 +78,6 @@ numvar enableTestRfm69receive(void){
   return 0;
 }
 
-numvar enableTestCC3000(void){
-  terminateAllTests();
-  testCC3000_enabled = true;
-  return 0;
-}
-
-numvar enableCC3000Patch(void){
-  terminateAllTests();
-  firmwareUpdateCC3000_enabled = true;
-  return 0;
-}
-
 numvar enableTestExternalCrystal(void){
   terminateAllTests();
   testExternalCrystal_enabled = true;
@@ -102,7 +86,6 @@ numvar enableTestExternalCrystal(void){
 
 numvar initTinyWatchdog(void){
   terminateAllTests();
-  wf.begin();
   if(eeprom_read_byte((uint8_t *) 0) != 0x73){
     eeprom_write_byte((uint8_t *) 0, 0x73);  
   }
@@ -115,14 +98,12 @@ numvar initTinyWatchdog(void){
 
 numvar startTinyWatchdog(void){
   terminateAllTests();
-  wf.begin();
   usingTinyWatchdog = true;
   return 0;
 }
 
 numvar stopTinyWatchdog(void){
   terminateAllTests();
-  wf.begin();
   if(eeprom_read_byte((uint8_t *) 0) != 0xFF){
     eeprom_write_byte((uint8_t *) 0, 0xFF);
   }   
@@ -145,8 +126,6 @@ numvar runV3LightTests(void){
   uint32_t test_bits = 0;
   
   test_bits |= (1UL << OUTPUTS_TEST);
-  test_bits |= (1UL << CC3000_FIRMWARE_PATCH);
-  test_bits |= (1UL << CC3000_TEST);
   test_bits |= (1UL << SDCARD_TEST);
   test_bits |= (1UL << WATCHDOG_TEST);
   
@@ -170,8 +149,6 @@ numvar runV3HeavyTests(void){
   uint32_t test_bits = 0;
   
   test_bits |= (1UL << OUTPUTS_TEST);
-  test_bits |= (1UL << CC3000_FIRMWARE_PATCH);
-  test_bits |= (1UL << CC3000_TEST);
   test_bits |= (1UL << SDCARD_TEST);
   test_bits |= (1UL << WATCHDOG_TEST);
   test_bits |= (1UL << SPIFLASH_TEST);
@@ -202,8 +179,6 @@ void setupBitlash(void){
   
   addBitlashFunction("menu", (bitlash_function) menu);  
   addBitlashFunction("test1", (bitlash_function) enableTestAllOutputs);
-  addBitlashFunction("test2",  (bitlash_function) enableTestCC3000);  
-  addBitlashFunction("test3",  (bitlash_function) enableCC3000Patch);  
   addBitlashFunction("test4", (bitlash_function) enableTestSdCard);
   addBitlashFunction("test5a", (bitlash_function) enableTestRfm69transmit); 
   addBitlashFunction("test5b", (bitlash_function) enableTestRfm69receive);  

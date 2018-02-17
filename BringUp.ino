@@ -34,34 +34,6 @@ void v3BringUp(void){
         waiting_for_ok = true;      
       }
     }       
-    else if(tests_to_run & (1UL << CC3000_FIRMWARE_PATCH)){
-      enableCC3000Patch();    
-      printTestBannerHeader();
-      Serial.println(F("CC3000 Patch: Please wait while CC3000 Firmware is updated"));   
-      printTestBannerTrailer();     
-      firmwareUpdateCC3000();
-      tests_to_run &= ~(1UL << CC3000_FIRMWARE_PATCH);  // clear the bit in RAM        
-      eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
-      printTestFooterHeader();
-      Serial.println(F("CC3000 Firmware Patch Complete."));
-      printTestFooterTrailer();
-      checkSuiteComplete(tests_to_run, true);
-      doReset();
-    }
-    else if(tests_to_run & (1UL << CC3000_TEST)){
-      enableTestCC3000(); 
-      printTestBannerHeader();
-      Serial.println(F("CC3000 Test: Will connect to network and ping the server"));
-      printTestBannerTrailer();        
-      testCC3000();      
-      tests_to_run &= ~(1UL << CC3000_TEST);  // clear the bit in RAM        
-      eeprom_write_dword((uint32_t *) 4, tests_to_run); // write it back to eeprom
-      printTestFooterHeader();
-      Serial.println(F("CC3000 Test Complete."));
-      printTestFooterTrailer();
-      checkSuiteComplete(tests_to_run, true);
-      doReset();
-    }
     else if(tests_to_run & (1UL << SDCARD_TEST)){      
       enableTestSdCard();
       printTestBannerHeader();

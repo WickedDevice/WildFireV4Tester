@@ -2,7 +2,6 @@
 File myFile;
 
 void setupSdCard(void){
-  wf.begin();  
   Serial.print(F("SD Card Initialization..."));        
   if (!SD.begin(16)) {
     Serial.println(F("Failed!"));      
